@@ -101,4 +101,74 @@ Object {
     expect(toJS(map)).toMatchInlineSnapshot(`Object {}`);
     unsub();
   });
+  test("works with custom mapValue", async () => {
+    const ref = getFirebaseRef({ firebase, path: testPath, limitToFirst: 2 });
+    const { value: map, unsub } = toMap<string, { data: any }>(ref, {
+      mapValue: v => {
+        if (!v) return v;
+        return v.data;
+      }
+    });
+    await firebase
+      .database()
+      .ref(testPath)
+      .set(listAsObject);
+    expect(toJS(map)).toMatchInlineSnapshot(`
+Object {
+  "id_0": 0,
+  "id_1": 1,
+}
+`);
+    await firebase
+      .database()
+      .ref(testPath)
+      .set({});
+    expect(toJS(map)).toMatchInlineSnapshot(`Object {}`);
+    unsub();
+  });
+  test("works with child_changed using update", async () => {
+    const ref = getFirebaseRef({ firebase, path: testPath });
+    const { value: map } = toMap(ref);
+    await ref.set(listAsObject);
+    expect(toJS(map)).toMatchInlineSnapshot(`
+Object {
+  "id_0": Object {
+    "data": 0,
+  },
+  "id_1": Object {
+    "data": 1,
+  },
+}
+`);
+    await ref.update({ id_0: "hi" });
+    expect(toJS(map)).toMatchInlineSnapshot(`
+Object {
+  "id_0": "hi",
+  "id_1": Object {
+    "data": 1,
+  },
+}
+`);
+  });
+  test("works with child_changed using set", async () => {
+    const ref = getFirebaseRef({ firebase, path: testPath });
+    const { value: map } = toMap(ref);
+    await ref.set(listAsObject);
+    expect(toJS(map)).toMatchInlineSnapshot(`
+Object {
+  "id_0": Object {
+    "data": 0,
+  },
+  "id_1": Object {
+    "data": 1,
+  },
+}
+`);
+    await ref.set({ id_0: "hi" });
+    expect(toJS(map)).toMatchInlineSnapshot(`
+Object {
+  "id_0": "hi",
+}
+`);
+  });
 });

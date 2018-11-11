@@ -31,7 +31,6 @@ export function toArray<K, V>(
     return;
   });
   const unsubChildRemoved = ref.on("child_removed", (v: any) => {
-    const valueOrNull = !v ? null : v.val();
     const keyOrNull = !v ? null : v.key;
     const childIndex = array.findIndex((v: any) => v.key === keyOrNull);
     if (childIndex === -1) {
@@ -40,9 +39,21 @@ export function toArray<K, V>(
     array.splice(childIndex, 1);
     return;
   });
+  const unsubChildChanged = ref.on("child_changed", (v: any) => {
+    const valueOrNull = !v ? null : v.val();
+    const keyOrNull = !v ? null : v.key;
+    const childIndex = array.findIndex((v: any) => v.key === keyOrNull);
+    if (childIndex === -1) {
+      return;
+    }
+    //NOT SURE
+    array.push(map(keyOrNull, valueOrNull));
+    return;
+  });
   const unsub = () => {
     unsubChildAdded && unsubChildAdded();
     unsubChildRemoved && unsubChildRemoved();
+    unsubChildChanged && unsubChildChanged();
   };
 
   return { value: array, unsub };

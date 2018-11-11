@@ -54,4 +54,60 @@ Array [
     expect(toJS(array)).toMatchInlineSnapshot(`Array []`);
     unsub();
   });
+  test("child_changed using set works", async () => {
+    const ref = getFirebaseRef({ path: testPath });
+    const { value: array, unsub } = toArray(ref);
+    await ref.set({ id_0: "hi", id_1: 1 });
+    expect(toJS(array)).toMatchInlineSnapshot(`
+Array [
+  Object {
+    "key": "id_0",
+    "value": "hi",
+  },
+  Object {
+    "key": "id_1",
+    "value": 1,
+  },
+]
+`);
+    await ref.set(null);
+    expect(toJS(array)).toMatchInlineSnapshot(`Array []`);
+    unsub();
+  });
+  test("child_changed using update works", async () => {
+    const ref = getFirebaseRef({ path: testPath });
+    const { value: array, unsub } = toArray(ref);
+    await ref.set(listAsObject);
+    await ref.update({ id_0: "hi" });
+    expect(toJS(array)).toMatchInlineSnapshot(`
+Array [
+  Object {
+    "key": "id_0",
+    "value": Object {
+      "data": 0,
+    },
+  },
+  Object {
+    "key": "id_1",
+    "value": Object {
+      "data": 1,
+    },
+  },
+  Object {
+    "key": "id_0",
+    "value": "hi",
+  },
+]
+`);
+    await ref.set(null);
+    expect(toJS(array)).toMatchInlineSnapshot(`
+Array [
+  Object {
+    "key": "id_0",
+    "value": "hi",
+  },
+]
+`);
+    unsub();
+  });
 });
